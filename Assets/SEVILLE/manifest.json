@@ -1,0 +1,18 @@
+{
+  "name": "com.smarteye.seville",
+  "version": "2.5.0",
+  "displayName": "Seville",
+  "description": "Seville makes easy to create VR-based content. It provides VR templates and various assets that can be modified as needed thus streamlining and simplifying the process of creating VR content.",
+  "unity": "2022.3.6",
+  "author": {
+    "name": "Seville Indonesia",
+    "email": "smarteyevirtuallearning@gmail.com",
+    "url": "https://smarteye.id/seville/"
+  },
+  "documentationUrl": "https://docs-seville.svcc.io/1",
+  "dependencies": {
+    "com.unity.inputsystem": "1.6.3",
+    "com.unity.xr.interaction.toolkit": "2.4.3",
+    "com.unity.2d.sprite": "1.0.0"
+  }
+}

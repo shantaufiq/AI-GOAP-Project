@@ -6,6 +6,10 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/GOAP AI/Scenes/SampleScene.unity
+    path: Assets/GOAP AI/Scenes/Sandboxing.unity
     guid: 99c9720ab356a0642a771bea13969a05
-  m_configObjects: {}
+  m_configObjects:
+    Unity.XR.Oculus.Settings: {fileID: 11400000, guid: 7562e14053cbd7c449d91dbfd2f17d38,
+      type: 2}
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: e60b642b68796af45852fea73fcc8c89,
+      type: 2}
