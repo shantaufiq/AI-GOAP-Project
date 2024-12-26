@@ -45,6 +45,7 @@ public sealed class GWorld
     private static ResourceQueue patients;
     private static ResourceQueue cubicles;
     private static ResourceQueue introArea;
+    private static ResourceQueue restArea;
     private static Dictionary<string, ResourceQueue> resources = new Dictionary<string, ResourceQueue>();
 
     static GWorld()
@@ -56,6 +57,8 @@ public sealed class GWorld
         resources.Add("cubicles", cubicles);
         introArea = new ResourceQueue("IntroArea", "FreeIntroArea", world);
         resources.Add("introAreas", introArea);
+        restArea = new ResourceQueue("RestArea", "FreeRestArea", world);
+        resources.Add("restAreas", restArea);
 
         Time.timeScale = 5;
     }

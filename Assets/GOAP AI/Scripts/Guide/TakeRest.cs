@@ -4,23 +4,36 @@ using UnityEngine;
 
 public class TakeRest : GAction
 {
+    GameObject resource;
     public override bool PrePerform()
     {
-        // Tidak ada precondition khusus untuk aksi Rest
-        return true;
+        resource = GWorld.Instance.GetQueue("restAreas").RemoveResource();
+        if (resource != null)
+        {
+            target = resource;
+            return true; // Rest area tersedia
+        }
+        Debug.Log("No rest area available.");
+        return false; // Tidak ada rest area, aksi gagal
     }
 
     public override bool PostPerform()
     {
-        // Pulihkan energi agen
-        Visitor visitor = GetComponent<Visitor>();
-        visitor.energy = Mathf.Min(visitor.energy + 50.0f, 100.0f); // Pulihkan energi hingga maksimum 100
+        if (resource != null)
+        {
+            GWorld.Instance.GetQueue("restAreas").AddResource(resource);
+            GWorld.Instance.GetWorld().ModifyState("FreeRestArea", 1); // Tambahkan kembali ke queue
+            beliefs.ModifyState("rested", 1);
 
-        // Hapus state "exhausted" dari beliefs
-        beliefs.RemoveState("exhausted");
+            // Pulihkan energi agen
+            Visitor visitor = GetComponent<Visitor>();
+            visitor.energy = Mathf.Min(visitor.energy + 50.0f, 100.0f); // Pulihkan energi hingga maksimum 100
 
-        Debug.Log("Rest completed. Energy restored to: " + visitor.energy);
+            // Hapus state "exhausted" jika ada
+            beliefs.RemoveState("exhausted");
 
+            Debug.Log("Rest completed. Energy restored to: " + visitor.energy);
+        }
         return true;
     }
 }
