@@ -16,8 +16,9 @@ public class SubGoal
     }
 }
 
-public class GAgent : MonoBehaviour
+public abstract class GAgent : MonoBehaviour
 {
+    public float energy = 100.0f; // Energi NPC saat ini
     public List<GAction> actions = new List<GAction>();
     public Dictionary<SubGoal, int> goals = new Dictionary<SubGoal, int>();
     public GInventory inventory = new GInventory();
@@ -30,14 +31,15 @@ public class GAgent : MonoBehaviour
 
     Vector3 destination = Vector3.zero;
 
-    // Start is called before the first frame update
     public void Start()
     {
         GAction[] acts = this.GetComponents<GAction>();
         foreach (GAction a in acts)
             actions.Add(a);
-    }
 
+        // Memulai pengecekan energi secara berkala
+        // InvokeRepeating("CheckEnergy", 0, 1f);
+    }
 
     bool invoked = false;
     void CompleteAction()
@@ -49,13 +51,11 @@ public class GAgent : MonoBehaviour
 
     void LateUpdate()
     {
-
         if (currentAction != null && currentAction.running)
         {
             float distanceToTarget = Vector3.Distance(destination, this.transform.position);
-            if (/*currentAction.agent.hasPath &&*/ distanceToTarget < 2f)//currentAction.agent.remainingDistance < 0.5f)
+            if (distanceToTarget < 2f)
             {
-               //Debug.Log("Distance to Goal: " + currentAction.agent.remainingDistance);
                 if (!invoked)
                 {
                     Invoke("CompleteAction", currentAction.duration);
@@ -73,11 +73,25 @@ public class GAgent : MonoBehaviour
 
             foreach (KeyValuePair<SubGoal, int> sg in sortedGoals)
             {
-                actionQueue = planner.plan(actions, sg.Key.sgoals, beliefs);
-                if (actionQueue != null)
+                if (energy <= 0 && sg.Key.sgoals.ContainsKey("rested"))
                 {
-                    currentGoal = sg.Key;
-                    break;
+                    // Prioritaskan goal "rested" jika energi habis
+                    actionQueue = planner.plan(actions, sg.Key.sgoals, beliefs);
+                    if (actionQueue != null)
+                    {
+                        currentGoal = sg.Key;
+                        break;
+                    }
+                }
+                else if (energy > 0)
+                {
+                    // Jalankan goal lain jika energi mencukupi
+                    actionQueue = planner.plan(actions, sg.Key.sgoals, beliefs);
+                    if (actionQueue != null)
+                    {
+                        currentGoal = sg.Key;
+                        break;
+                    }
                 }
             }
         }
@@ -94,31 +108,49 @@ public class GAgent : MonoBehaviour
         if (actionQueue != null && actionQueue.Count > 0)
         {
             currentAction = actionQueue.Dequeue();
-            if (currentAction.PrePerform())
+
+            if (currentAction.IsAchievableWithEnergy(energy))
             {
-                if (currentAction.target == null && currentAction.targetTag != "")
-                    currentAction.target = GameObject.FindWithTag(currentAction.targetTag);
-
-                if (currentAction.target != null)
+                if (currentAction.PrePerform())
                 {
-                    currentAction.running = true;
+                    if (currentAction.target == null && currentAction.targetTag != "")
+                        currentAction.target = GameObject.FindWithTag(currentAction.targetTag);
 
-                    //look for a Destination and use that
-                    Transform dest = currentAction.target.transform.Find("Destination");
-                    if (dest != null)
-                        destination = dest.position;
-                    else
-                        destination = currentAction.target.transform.position;
-                       
-                    currentAction.agent.SetDestination(destination);
+                    if (currentAction.target != null)
+                    {
+                        currentAction.running = true;
+                        energy -= currentAction.energyCost; // Kurangi energi
+                        CheckEnergy(); // Periksa energi setelah pengurangan
+
+                        Transform dest = currentAction.target.transform.Find("Destination");
+                        if (dest != null)
+                            destination = dest.position;
+                        else
+                            destination = currentAction.target.transform.position;
+
+                        currentAction.agent.SetDestination(destination);
+                    }
+                }
+                else
+                {
+                    actionQueue = null;
                 }
             }
             else
             {
+                CheckEnergy(); // Pastikan energi diperiksa jika aksi gagal
                 actionQueue = null;
             }
-
         }
+    }
 
+
+    void CheckEnergy()
+    {
+        if (energy <= 0 && !beliefs.HasState("exhausted"))
+        {
+            beliefs.ModifyState("exhausted", 0);
+            Debug.Log("Not enough energy to perform action: " + currentAction?.actionName);
+        }
     }
 }

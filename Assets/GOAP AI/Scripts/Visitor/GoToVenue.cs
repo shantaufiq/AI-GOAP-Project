@@ -1,6 +1,8 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
-public class MasukGedungAction : GAction
+public class GoToVenue : GAction
 {
     public override bool PrePerform()
     {

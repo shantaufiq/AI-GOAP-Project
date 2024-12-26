@@ -7,6 +7,7 @@ public abstract class GAction : MonoBehaviour
 {
     public string actionName = "Action";
     public float cost = 1.0f;
+    public float energyCost = 10.0f; // Energi yang dibutuhkan untuk menjalankan aksi
     public GameObject target;
     public string targetTag;
     public float duration = 0;
@@ -16,8 +17,6 @@ public abstract class GAction : MonoBehaviour
 
     public Dictionary<string, int> preconditions;
     public Dictionary<string, int> effects;
-
-    public WorldStates agentBeliefs;
 
     public GInventory inventory;
     public WorldStates beliefs;
@@ -63,6 +62,12 @@ public abstract class GAction : MonoBehaviour
                 return false;
         }
         return true;
+    }
+
+    // Tambahkan logika untuk memeriksa energi
+    public bool IsAchievableWithEnergy(float currentEnergy)
+    {
+        return currentEnergy >= energyCost;
     }
 
     public abstract bool PrePerform();

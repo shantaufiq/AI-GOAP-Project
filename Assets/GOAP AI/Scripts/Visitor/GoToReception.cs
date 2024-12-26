@@ -1,6 +1,8 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
-public class RegistrasiResepsionisAction : GAction
+public class GoToReception : GAction
 {
     public override bool PrePerform()
     {
@@ -9,6 +11,7 @@ public class RegistrasiResepsionisAction : GAction
 
     public override bool PostPerform()
     {
+        beliefs.ModifyState("atReception", 1);
         return true;
     }
 }
