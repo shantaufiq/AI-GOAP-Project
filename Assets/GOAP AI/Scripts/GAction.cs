@@ -1,7 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.SocialPlatforms;
 
 public abstract class GAction : MonoBehaviour
 {
@@ -11,6 +13,8 @@ public abstract class GAction : MonoBehaviour
     public GameObject target;
     public string targetTag;
     public float duration = 0;
+    public bool hasMultiLocationTarget = false;
+    public string locationResourceName = "";
     public WorldState[] preConditions;
     public WorldState[] afterEffects;
     public NavMeshAgent agent;
@@ -72,4 +76,12 @@ public abstract class GAction : MonoBehaviour
 
     public abstract bool PrePerform();
     public abstract bool PostPerform();
+}
+
+public interface IMultiTargetAction
+{
+    bool hasMultipleTargets { get; }
+    int targetLocations { get; }
+    List<GameObject> visitedLocations { get; }
+    GameObject GetNextTarget();
 }

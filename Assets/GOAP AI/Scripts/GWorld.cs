@@ -36,6 +36,37 @@ public class ResourceQueue
         return que.Dequeue();
     }
 
+    public GameObject RemoveResource(GameObject target)
+    {
+        if (que.Contains(target))
+        {
+            var tempQueue = new Queue<GameObject>();
+            while (que.Count > 0)
+            {
+                GameObject resource = que.Dequeue();
+                if (resource != target)
+                {
+                    tempQueue.Enqueue(resource);
+                }
+            }
+            que = tempQueue; // Ganti antrean dengan antrean baru tanpa target
+            return target;
+        }
+        return null; // Target tidak ditemukan
+    }
+
+    // Method baru untuk mengambil lokasi yang belum dikunjungi
+    public GameObject GetUnvisitedResource(List<GameObject> visitedLocations)
+    {
+        foreach (var resource in que)
+        {
+            if (!visitedLocations.Contains(resource))
+            {
+                return resource;
+            }
+        }
+        return null;
+    }
 }
 
 public sealed class GWorld
@@ -46,6 +77,7 @@ public sealed class GWorld
     private static ResourceQueue cubicles;
     private static ResourceQueue introArea;
     private static ResourceQueue restArea;
+    private static ResourceQueue contentArea;
     private static Dictionary<string, ResourceQueue> resources = new Dictionary<string, ResourceQueue>();
 
     static GWorld()
@@ -59,13 +91,28 @@ public sealed class GWorld
         resources.Add("introAreas", introArea);
         restArea = new ResourceQueue("RestArea", "FreeRestArea", world);
         resources.Add("restAreas", restArea);
+        contentArea = new ResourceQueue("ContentArea", "FreeContentArea", world);
+        resources.Add("contentArea", contentArea);
 
         Time.timeScale = 5;
     }
 
     public ResourceQueue GetQueue(string type)
     {
+        if (!resources.ContainsKey(type))
+        {
+            Debug.LogError($"Queue '{type}' not found in GWorld.");
+            return null;
+        }
         return resources[type];
+    }
+
+    public void AddQueue(string type, ResourceQueue queue)
+    {
+        if (!resources.ContainsKey(type))
+        {
+            resources.Add(type, queue);
+        }
     }
 
     private GWorld()

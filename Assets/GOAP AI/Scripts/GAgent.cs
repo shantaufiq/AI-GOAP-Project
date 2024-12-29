@@ -36,14 +36,37 @@ public abstract class GAgent : MonoBehaviour
         GAction[] acts = this.GetComponents<GAction>();
         foreach (GAction a in acts)
             actions.Add(a);
-
-        // Memulai pengecekan energi secara berkala
-        // InvokeRepeating("CheckEnergy", 0, 1f);
     }
 
     bool invoked = false;
+
     void CompleteAction()
     {
+        if (currentAction is IMultiTargetAction multiTargetAction)
+        {
+            if (multiTargetAction.visitedLocations.Count < multiTargetAction.targetLocations)
+            {
+                Debug.Log($"Action {currentAction.actionName} still has targets to visit.");
+                currentAction.target = multiTargetAction.GetNextTarget();
+
+                if (currentAction.target != null)
+                {
+                    Transform dest = currentAction.target.transform.Find("Destination");
+                    destination = dest != null ? dest.position : currentAction.target.transform.position;
+                    currentAction.agent.SetDestination(destination);
+
+                    // Pengurangan energi untuk aksi baru
+                    energy -= currentAction.energyCost;
+                    CheckEnergy();
+
+                    currentAction.running = true;
+                    invoked = false;
+                }
+                return;
+            }
+        }
+
+        // Jika semua target selesai
         currentAction.running = false;
         currentAction.PostPerform();
         invoked = false;
@@ -54,6 +77,36 @@ public abstract class GAgent : MonoBehaviour
         if (currentAction != null && currentAction.running)
         {
             float distanceToTarget = Vector3.Distance(destination, this.transform.position);
+
+            if (currentAction is IMultiTargetAction multiTargetAction)
+            {
+                if (multiTargetAction.visitedLocations.Count < multiTargetAction.targetLocations)
+                {
+                    if (distanceToTarget < 2f)
+                    {
+                        Debug.Log($"Still visiting targets: {multiTargetAction.visitedLocations.Count}/{multiTargetAction.targetLocations}");
+
+                        // Ambil target berikutnya
+                        currentAction.target = multiTargetAction.GetNextTarget();
+                        if (currentAction.target != null)
+                        {
+                            Transform dest = currentAction.target.transform.Find("Destination");
+                            destination = dest != null ? dest.position : currentAction.target.transform.position;
+                            currentAction.agent.SetDestination(destination); // Tetapkan tujuan berikutnya
+                            currentAction.running = true; // Tetap jalankan aksi
+                            invoked = false; // Reset invoked untuk perjalanan berikutnya
+                        }
+                        else
+                        {
+                            Debug.LogError("No next target found.");
+                            currentAction.running = false; // Hentikan aksi jika tidak ada target lagi
+                        }
+                    }
+                    return; // Hentikan sementara hingga tujuan berikutnya diproses
+                }
+            }
+
+            // Proses penyelesaian aksi jika tidak ada target tersisa
             if (distanceToTarget < 2f)
             {
                 if (!invoked)
@@ -65,6 +118,7 @@ public abstract class GAgent : MonoBehaviour
             return;
         }
 
+        // Perencanaan aksi baru jika tidak ada aksi yang sedang berjalan
         if (planner == null || actionQueue == null)
         {
             planner = new GPlanner();
@@ -119,16 +173,22 @@ public abstract class GAgent : MonoBehaviour
                     if (currentAction.target != null)
                     {
                         currentAction.running = true;
-                        energy -= currentAction.energyCost; // Kurangi energi
-                        CheckEnergy(); // Periksa energi setelah pengurangan
+
+                        // Kurangi energi saat memulai aksi baru
+                        energy -= currentAction.energyCost;
+                        CheckEnergy();
 
                         Transform dest = currentAction.target.transform.Find("Destination");
-                        if (dest != null)
-                            destination = dest.position;
-                        else
-                            destination = currentAction.target.transform.position;
-
+                        destination = dest != null ? dest.position : currentAction.target.transform.position;
                         currentAction.agent.SetDestination(destination);
+
+                        // Handle actions with multiple targets
+                        if (currentAction is IMultiTargetAction multiTargetAction &&
+                            multiTargetAction.visitedLocations.Count < multiTargetAction.targetLocations)
+                        {
+                            Debug.Log($"Starting multi-target action: {currentAction.actionName}");
+                            return;
+                        }
                     }
                 }
                 else
@@ -138,19 +198,23 @@ public abstract class GAgent : MonoBehaviour
             }
             else
             {
-                CheckEnergy(); // Pastikan energi diperiksa jika aksi gagal
+                Debug.LogWarning("Not enough energy to perform action: " + currentAction.actionName);
                 actionQueue = null;
             }
         }
     }
 
-
+    // Fungsi untuk memeriksa energi
     void CheckEnergy()
     {
-        if (energy <= 0 && !beliefs.HasState("exhausted"))
+        if (energy <= 0)
         {
-            beliefs.ModifyState("exhausted", 0);
-            Debug.Log("Not enough energy to perform action: " + currentAction?.actionName);
+            Debug.LogWarning("Energy depleted! Prioritizing rest.");
+            beliefs.ModifyState("exhausted", 1);
+        }
+        else
+        {
+            beliefs.RemoveState("exhausted");
         }
     }
 }
