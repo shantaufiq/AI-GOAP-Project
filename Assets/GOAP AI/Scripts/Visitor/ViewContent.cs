@@ -64,7 +64,7 @@ public class ViewContent : GAction, IMultiTargetAction
         target = GetNextTarget();
         if (target != null)
         {
-            GWorld.Instance.GetQueue(locationResourceName).RemoveResource(target);
+            // GWorld.Instance.GetQueue(locationResourceName).RemoveResource(target);
             return true;
         }
 

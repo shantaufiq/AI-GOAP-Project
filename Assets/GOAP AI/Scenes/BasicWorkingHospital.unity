@@ -13224,7 +13224,7 @@ MonoBehaviour:
   energyCost: 0
   target: {fileID: 0}
   targetTag: 
-  duration: 20
+  duration: 5
   hasMultiLocationTarget: 0
   locationResourceName: 
   preConditions:

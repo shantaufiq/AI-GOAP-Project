@@ -24,144 +24,104 @@ public abstract class GAgent : MonoBehaviour
     public GInventory inventory = new GInventory();
     public WorldStates beliefs = new WorldStates();
 
-    GPlanner planner;
-    Queue<GAction> actionQueue;
+    private GPlanner planner;
+    private Queue<GAction> actionQueue;
     public GAction currentAction;
-    SubGoal currentGoal;
+    private SubGoal currentGoal;
+    private Vector3 destination = Vector3.zero;
 
-    Vector3 destination = Vector3.zero;
+    private bool invoked = false;
+    private bool isStaying = false;
 
     public void Start()
     {
-        GAction[] acts = this.GetComponents<GAction>();
+        GAction[] acts = GetComponents<GAction>();
         foreach (GAction a in acts)
+        {
             actions.Add(a);
+        }
     }
 
-    bool invoked = false;
-
-    void CompleteAction()
+    private void LateUpdate()
     {
+        ManageVisitorBehavior();
+
+        if (currentAction != null && currentAction.running)
+        {
+            HandleCurrentAction();
+            return;
+        }
+
+        PlanNewActions();
+    }
+
+    private void HandleCurrentAction()
+    {
+        float distanceToTarget = Vector3.Distance(destination, transform.position);
+
         if (currentAction is IMultiTargetAction multiTargetAction)
         {
             if (multiTargetAction.visitedLocations.Count < multiTargetAction.targetLocations)
             {
-                Debug.Log($"Action {currentAction.actionName} still has targets to visit.");
-                currentAction.target = multiTargetAction.GetNextTarget();
-
-                if (currentAction.target != null)
+                if (distanceToTarget < 2f && !isStaying)
                 {
-                    Transform dest = currentAction.target.transform.Find("Destination");
-                    destination = dest != null ? dest.position : currentAction.target.transform.position;
-                    currentAction.agent.SetDestination(destination);
-
-                    // Pengurangan energi untuk aksi baru
-                    energy -= currentAction.energyCost;
-                    CheckEnergy();
-
-                    multiTargetAction.AddAreaResource();
-
-                    currentAction.running = true;
-                    invoked = false;
+                    isStaying = true;
+                    StartCoroutine(StayAtLocation(multiTargetAction));
+                    return;
                 }
-                return;
+            }
+            else
+            {
+                // Semua target sudah dikunjungi
+                currentAction.running = false;
+                Debug.Log("All multi-target locations visited.");
             }
         }
-
-        // Jika semua target selesai
-        currentAction.running = false;
-        currentAction.PostPerform();
-        invoked = false;
+        else if (distanceToTarget < 2f && !invoked) // Untuk aksi biasa
+        {
+            Invoke("CompleteAction", currentAction.duration);
+            invoked = true;
+        }
     }
 
-    void LateUpdate()
+    private IEnumerator StayAtLocation(IMultiTargetAction multiTargetAction)
     {
-        if (currentAction != null && currentAction.running)
+        Debug.Log("Staying at location for duration: " + currentAction.duration);
+        yield return new WaitForSeconds(currentAction.duration);
+
+        if (multiTargetAction.visitedLocations.Count < multiTargetAction.targetLocations)
         {
-            float distanceToTarget = Vector3.Distance(destination, this.transform.position);
-
-            if (currentAction is IMultiTargetAction multiTargetAction)
-            {
-                if (multiTargetAction.visitedLocations.Count < multiTargetAction.targetLocations)
-                {
-                    if (distanceToTarget < 2f)
-                    {
-                        Debug.Log($"Still visiting targets: {multiTargetAction.visitedLocations.Count}/{multiTargetAction.targetLocations}");
-
-                        // Ambil target berikutnya
-                        currentAction.target = multiTargetAction.GetNextTarget();
-                        if (currentAction.target != null)
-                        {
-                            Transform dest = currentAction.target.transform.Find("Destination");
-                            destination = dest != null ? dest.position : currentAction.target.transform.position;
-                            currentAction.agent.SetDestination(destination); // Tetapkan tujuan berikutnya
-
-                            currentAction.running = true; // Tetap jalankan aksi
-                            invoked = false; // Reset invoked untuk perjalanan berikutnya
-                        }
-                        else
-                        {
-                            Debug.LogError("No next target found.");
-                            currentAction.running = false; // Hentikan aksi jika tidak ada target lagi
-                        }
-
-                        multiTargetAction.AddAreaResource();
-                    }
-                    return; // Hentikan sementara hingga tujuan berikutnya diproses
-                }
-            }
-
-            // Proses penyelesaian aksi jika tidak ada target tersisa
-            if (distanceToTarget < 2f)
-            {
-                if (!invoked)
-                {
-                    Invoke("CompleteAction", currentAction.duration);
-                    invoked = true;
-                }
-            }
-            return;
+            SetNextMultiTarget(multiTargetAction);
+        }
+        else
+        {
+            Debug.Log("All target locations visited.");
+            currentAction.running = false; // Pastikan aksi dihentikan
         }
 
-        // Perencanaan aksi baru jika tidak ada aksi yang sedang berjalan
+        isStaying = false;
+    }
+
+    private void PlanNewActions()
+    {
         if (planner == null || actionQueue == null)
         {
             planner = new GPlanner();
+            var sortedGoals = goals.OrderByDescending(g => g.Value);
 
-            var sortedGoals = from entry in goals orderby entry.Value descending select entry;
-
-            foreach (KeyValuePair<SubGoal, int> sg in sortedGoals)
+            foreach (var sg in sortedGoals)
             {
-                if (energy <= 0 && sg.Key.sgoals.ContainsKey("rested"))
+                if ((energy <= 0 && sg.Key.sgoals.ContainsKey("rested")) || energy > 0)
                 {
-                    // Prioritaskan goal "rested" jika energi habis
                     actionQueue = planner.plan(actions, sg.Key.sgoals, beliefs);
                     if (actionQueue != null)
                     {
                         currentGoal = sg.Key;
-                        break;
-                    }
-                }
-                else if (energy > 0)
-                {
-                    // Jalankan goal lain jika energi mencukupi
-                    actionQueue = planner.plan(actions, sg.Key.sgoals, beliefs);
-                    if (actionQueue != null)
-                    {
-                        currentGoal = sg.Key;
+                        Debug.Log($"Selected goal: {sg.Key.sgoals.Keys.First()} with priority {sg.Value}");
                         break;
                     }
                 }
             }
-        }
-
-        if (actionQueue != null && actionQueue.Count == 0)
-        {
-            if (currentGoal.remove)
-            {
-                goals.Remove(currentGoal);
-            }
-            planner = null;
         }
 
         if (actionQueue != null && actionQueue.Count > 0)
@@ -172,29 +132,7 @@ public abstract class GAgent : MonoBehaviour
             {
                 if (currentAction.PrePerform())
                 {
-                    if (currentAction.target == null && currentAction.targetTag != "")
-                        currentAction.target = GameObject.FindWithTag(currentAction.targetTag);
-
-                    if (currentAction.target != null)
-                    {
-                        currentAction.running = true;
-
-                        // Kurangi energi saat memulai aksi baru
-                        energy -= currentAction.energyCost;
-                        CheckEnergy();
-
-                        Transform dest = currentAction.target.transform.Find("Destination");
-                        destination = dest != null ? dest.position : currentAction.target.transform.position;
-                        currentAction.agent.SetDestination(destination);
-
-                        // Handle actions with multiple targets
-                        if (currentAction is IMultiTargetAction multiTargetAction &&
-                            multiTargetAction.visitedLocations.Count < multiTargetAction.targetLocations)
-                        {
-                            Debug.Log($"Starting multi-target action: {currentAction.actionName}");
-                            return;
-                        }
-                    }
+                    SetActionDestination(currentAction);
                 }
                 else
                 {
@@ -207,10 +145,49 @@ public abstract class GAgent : MonoBehaviour
                 actionQueue = null;
             }
         }
+        else if (actionQueue != null && actionQueue.Count == 0)
+        {
+            if (currentGoal.remove)
+            {
+                goals.Remove(currentGoal);
+            }
+            planner = null;
+        }
     }
 
-    // Fungsi untuk memeriksa energi
-    void CheckEnergy()
+    private void CompleteAction()
+    {
+        Debug.Log($"Complete Action... {currentAction.actionName}");
+        currentAction.running = false;
+        currentAction.PostPerform();
+        invoked = false;
+    }
+
+    private void SetActionDestination(GAction action)
+    {
+        if (action.target == null && action.targetTag != "")
+        {
+            action.target = GameObject.FindWithTag(action.targetTag);
+        }
+
+        if (action.target != null)
+        {
+            Transform dest = action.target.transform.Find("Destination");
+            destination = dest != null ? dest.position : action.target.transform.position;
+            action.agent.SetDestination(destination);
+
+            action.running = true;
+            energy -= action.energyCost;
+            CheckEnergy();
+        }
+        else
+        {
+            Debug.LogWarning("Action target not found: " + action.actionName);
+            actionQueue = null;
+        }
+    }
+
+    private void CheckEnergy()
     {
         if (energy <= 0)
         {
@@ -220,6 +197,37 @@ public abstract class GAgent : MonoBehaviour
         else
         {
             beliefs.RemoveState("exhausted");
+        }
+    }
+
+    private void ManageVisitorBehavior()
+    {
+        if (beliefs.HasState("exhausted") && energy >= 80)
+        {
+            beliefs.RemoveState("exhausted");
+            Debug.Log("Visitor is rested, resuming normal behavior.");
+        }
+    }
+
+    private void SetNextMultiTarget(IMultiTargetAction multiTargetAction)
+    {
+        multiTargetAction.AddAreaResource();
+
+        if (multiTargetAction.visitedLocations.Count >= multiTargetAction.targetLocations)
+        {
+            Debug.Log("All multi-target locations visited. Ending action.");
+            currentAction.running = false; // Hentikan aksi
+            return;
+        }
+
+        currentAction.target = multiTargetAction.GetNextTarget();
+        if (currentAction.target != null)
+        {
+            SetActionDestination(currentAction);
+        }
+        else
+        {
+            Debug.LogError("No next target found for multi-target action.");
         }
     }
 }
