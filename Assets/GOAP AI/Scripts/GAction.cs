@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.SocialPlatforms;
 
 public abstract class GAction : MonoBehaviour
 {
@@ -84,4 +83,5 @@ public interface IMultiTargetAction
     int targetLocations { get; }
     List<GameObject> visitedLocations { get; }
     GameObject GetNextTarget();
+    void AddAreaResource();
 }

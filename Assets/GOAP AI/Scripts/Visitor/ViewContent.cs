@@ -29,15 +29,34 @@ public class ViewContent : GAction, IMultiTargetAction
 
     public GameObject GetNextTarget()
     {
-        foreach (var location in GWorld.Instance.GetQueue(locationResourceName).que)
+        var queue = GWorld.Instance.GetQueue(locationResourceName);
+        if (queue == null || queue.que.Count == 0)
         {
-            if (!visitedLocations.Contains(location))
-            {
-                visitedLocations.Add(location);
-                return location;
-            }
+            Debug.LogWarning("Queue is empty or not initialized.");
+            return null; // Tidak ada target yang tersedia
         }
-        return null;
+
+        GameObject newTarget = null;
+
+        while (queue.que.Count > 0)
+        {
+            // Ambil resource dari antrean
+            newTarget = queue.RemoveResource();
+
+            // Jika target belum dikunjungi, tambahkan ke visitedLocations
+            if (!visitedLocations.Contains(newTarget))
+            {
+                visitedLocations.Add(newTarget);
+                GWorld.Instance.GetWorld().ModifyState("FreeContentArea", -1);
+                return newTarget;
+            }
+
+            // Kembalikan resource ke antrean jika sudah dikunjungi
+            queue.AddResource(newTarget);
+        }
+
+        Debug.LogWarning("No unvisited targets available.");
+        return null; // Tidak ada target yang belum dikunjungi
     }
 
     public override bool PrePerform()
@@ -57,12 +76,18 @@ public class ViewContent : GAction, IMultiTargetAction
     {
         if (_visitedLocations.Count >= _targetLocations)
         {
-            GWorld.Instance.GetQueue(locationResourceName).AddResource(target);
+            AddAreaResource();
             Debug.Log("All target locations visited.");
             beliefs.ModifyState("viewedContent", 1);
             return true;
         }
 
         return false;
+    }
+
+    public void AddAreaResource()
+    {
+        GWorld.Instance.GetQueue(locationResourceName).AddResource(target);
+        GWorld.Instance.GetWorld().ModifyState("FreeContentArea", 1);
     }
 }

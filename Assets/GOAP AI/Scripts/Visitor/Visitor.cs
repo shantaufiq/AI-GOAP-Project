@@ -11,13 +11,13 @@ public class Visitor : GAgent
         goals.Add(s1, 2);
 
         SubGoal s2 = new SubGoal("atIntroArea", 1, true);
-        goals.Add(s2, 3);
+        goals.Add(s2, 4);
 
         SubGoal s3 = new SubGoal("viewedContent", 1, true);
         goals.Add(s3, 5);
 
         SubGoal s4 = new SubGoal("goingHome", 1, true);
-        goals.Add(s4, 4);
+        goals.Add(s4, 3);
 
         SubGoal s5 = new SubGoal("rested", 1, false);
         goals.Add(s5, 1);

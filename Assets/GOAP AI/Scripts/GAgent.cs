@@ -59,6 +59,8 @@ public abstract class GAgent : MonoBehaviour
                     energy -= currentAction.energyCost;
                     CheckEnergy();
 
+                    multiTargetAction.AddAreaResource();
+
                     currentAction.running = true;
                     invoked = false;
                 }
@@ -93,6 +95,7 @@ public abstract class GAgent : MonoBehaviour
                             Transform dest = currentAction.target.transform.Find("Destination");
                             destination = dest != null ? dest.position : currentAction.target.transform.position;
                             currentAction.agent.SetDestination(destination); // Tetapkan tujuan berikutnya
+
                             currentAction.running = true; // Tetap jalankan aksi
                             invoked = false; // Reset invoked untuk perjalanan berikutnya
                         }
@@ -101,6 +104,8 @@ public abstract class GAgent : MonoBehaviour
                             Debug.LogError("No next target found.");
                             currentAction.running = false; // Hentikan aksi jika tidak ada target lagi
                         }
+
+                        multiTargetAction.AddAreaResource();
                     }
                     return; // Hentikan sementara hingga tujuan berikutnya diproses
                 }

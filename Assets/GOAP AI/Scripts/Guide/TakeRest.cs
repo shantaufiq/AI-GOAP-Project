@@ -11,6 +11,7 @@ public class TakeRest : GAction
         if (resource != null)
         {
             target = resource;
+            GWorld.Instance.GetWorld().ModifyState("FreeRestArea", -1);
             return true; // Rest area tersedia
         }
         Debug.Log("No rest area available.");

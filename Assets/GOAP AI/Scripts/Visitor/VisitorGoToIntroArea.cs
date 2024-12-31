@@ -12,6 +12,7 @@ public class VisitorGoToIntroArea : GAction
         if (resource != null)
         {
             target = resource;
+            GWorld.Instance.GetWorld().ModifyState("FreeIntroArea", -1);
             return true; // Area intro tersedia
         }
         Debug.Log("No intro area available. Skipping to view content.");
@@ -24,6 +25,7 @@ public class VisitorGoToIntroArea : GAction
         if (resource != null)
         {
             GWorld.Instance.GetQueue("introAreas").AddResource(resource);
+            GWorld.Instance.GetWorld().ModifyState("FreeIntroArea", 1);
             beliefs.ModifyState("atIntroArea", 1);
         }
         return true;
