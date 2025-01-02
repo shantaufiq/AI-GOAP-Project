@@ -8,7 +8,7 @@ public class Visitor : GAgent
 
         // Tambahkan SubGoal untuk Visitor
         SubGoal s1 = new SubGoal("atReception", 1, true);
-        goals.Add(s1, 2);
+        goals.Add(s1, 1);
 
         SubGoal s2 = new SubGoal("atIntroArea", 1, true);
         goals.Add(s2, 4);
@@ -20,6 +20,6 @@ public class Visitor : GAgent
         goals.Add(s4, 3);
 
         SubGoal s5 = new SubGoal("rested", 1, false);
-        goals.Add(s5, 1);
+        goals.Add(s5, 2);
     }
 }

@@ -31,7 +31,8 @@ public abstract class GAgent : MonoBehaviour
     private Vector3 destination = Vector3.zero;
 
     private bool invoked = false;
-    private bool isStaying = false;
+    private bool isResting = false;
+    private bool isSearchingMultiTarget = false;
 
     public void Start()
     {
@@ -44,62 +45,24 @@ public abstract class GAgent : MonoBehaviour
 
     private void LateUpdate()
     {
-        ManageVisitorBehavior();
-
         if (currentAction != null && currentAction.running)
         {
-            HandleCurrentAction();
+            CheckCompleteAction();
             return;
         }
 
         PlanNewActions();
     }
 
-    private void HandleCurrentAction()
+    private void CheckCompleteAction()
     {
         float distanceToTarget = Vector3.Distance(destination, transform.position);
 
-        if (currentAction is IMultiTargetAction multiTargetAction)
-        {
-            if (multiTargetAction.visitedLocations.Count < multiTargetAction.targetLocations)
-            {
-                if (distanceToTarget < 2f && !isStaying)
-                {
-                    isStaying = true;
-                    StartCoroutine(StayAtLocation(multiTargetAction));
-                    return;
-                }
-            }
-            else
-            {
-                // Semua target sudah dikunjungi
-                currentAction.running = false;
-                Debug.Log("All multi-target locations visited.");
-            }
-        }
-        else if (distanceToTarget < 2f && !invoked) // Untuk aksi biasa
+        if (currentAction is not IMultiTargetAction multiTargetAction && distanceToTarget < 2f && !invoked) // Untuk aksi biasa
         {
             Invoke("CompleteAction", currentAction.duration);
             invoked = true;
         }
-    }
-
-    private IEnumerator StayAtLocation(IMultiTargetAction multiTargetAction)
-    {
-        Debug.Log("Staying at location for duration: " + currentAction.duration);
-        yield return new WaitForSeconds(currentAction.duration);
-
-        if (multiTargetAction.visitedLocations.Count < multiTargetAction.targetLocations)
-        {
-            SetNextMultiTarget(multiTargetAction);
-        }
-        else
-        {
-            Debug.Log("All target locations visited.");
-            currentAction.running = false; // Pastikan aksi dihentikan
-        }
-
-        isStaying = false;
     }
 
     private void PlanNewActions()
@@ -107,17 +70,28 @@ public abstract class GAgent : MonoBehaviour
         if (planner == null || actionQueue == null)
         {
             planner = new GPlanner();
-            var sortedGoals = goals.OrderByDescending(g => g.Value);
 
-            foreach (var sg in sortedGoals)
+            var sortedGoals = from entry in goals orderby entry.Value descending select entry;
+
+            foreach (KeyValuePair<SubGoal, int> sg in sortedGoals)
             {
-                if ((energy <= 0 && sg.Key.sgoals.ContainsKey("rested")) || energy > 0)
+                if (energy <= 0 && sg.Key.sgoals.ContainsKey("rested"))
                 {
+                    // Prioritaskan goal "rested" jika energi habis
                     actionQueue = planner.plan(actions, sg.Key.sgoals, beliefs);
                     if (actionQueue != null)
                     {
                         currentGoal = sg.Key;
-                        Debug.Log($"Selected goal: {sg.Key.sgoals.Keys.First()} with priority {sg.Value}");
+                        break;
+                    }
+                }
+                else if (energy > 0)
+                {
+                    // Jalankan goal lain jika energi mencukupi
+                    actionQueue = planner.plan(actions, sg.Key.sgoals, beliefs);
+                    if (actionQueue != null)
+                    {
+                        currentGoal = sg.Key;
                         break;
                     }
                 }
@@ -132,7 +106,11 @@ public abstract class GAgent : MonoBehaviour
             {
                 if (currentAction.PrePerform())
                 {
-                    SetActionDestination(currentAction);
+                    if (currentAction is IMultiTargetAction multiTargetAction)
+                    {
+                        StartMultiTargetCoroutine(multiTargetAction);
+                    }
+                    else SetActionDestination(currentAction);
                 }
                 else
                 {
@@ -143,6 +121,13 @@ public abstract class GAgent : MonoBehaviour
             {
                 Debug.LogWarning("Not enough energy to perform action: " + currentAction.actionName);
                 actionQueue = null;
+
+
+                GAction restAction = actions.FirstOrDefault(a => a.actionName == "TakeRest");
+                if (restAction != null)
+                {
+                    currentAction = restAction;
+                }
             }
         }
         else if (actionQueue != null && actionQueue.Count == 0)
@@ -161,6 +146,8 @@ public abstract class GAgent : MonoBehaviour
         currentAction.running = false;
         currentAction.PostPerform();
         invoked = false;
+
+        CheckEnergy();
     }
 
     private void SetActionDestination(GAction action)
@@ -178,7 +165,7 @@ public abstract class GAgent : MonoBehaviour
 
             action.running = true;
             energy -= action.energyCost;
-            CheckEnergy();
+
         }
         else
         {
@@ -194,40 +181,100 @@ public abstract class GAgent : MonoBehaviour
             Debug.LogWarning("Energy depleted! Prioritizing rest.");
             beliefs.ModifyState("exhausted", 1);
         }
-        else
+    }
+
+    private void StartMultiTargetCoroutine(IMultiTargetAction multiTargetAction)
+    {
+        if (!isSearchingMultiTarget)
         {
-            beliefs.RemoveState("exhausted");
+            isSearchingMultiTarget = true;
+            StartCoroutine(SearchingMultiTarget(multiTargetAction));
         }
     }
 
-    private void ManageVisitorBehavior()
+    private IEnumerator SearchingMultiTarget(IMultiTargetAction multiTargetAction)
     {
-        if (beliefs.HasState("exhausted") && energy >= 80)
-        {
-            beliefs.RemoveState("exhausted");
-            Debug.Log("Visitor is rested, resuming normal behavior.");
-        }
-    }
+        if (currentAction is not IMultiTargetAction) yield break;
 
-    private void SetNextMultiTarget(IMultiTargetAction multiTargetAction)
-    {
-        multiTargetAction.AddAreaResource();
+        int maxAttempts = 10;
+        int attempt = 0;
+
+        while (multiTargetAction.visitedLocations.Count < multiTargetAction.targetLocations && attempt < maxAttempts)
+        {
+            attempt++;
+            Debug.Log($"Starting multi-target action. Attempt {attempt}/{maxAttempts}");
+
+            currentAction.target = multiTargetAction.GetNextTarget();
+
+            if (currentAction.target != null)
+            {
+                // Debug.Log($"Target acquired: {currentAction.target.name}");
+                SetActionDestination(currentAction);
+                yield return new WaitUntil(() => !currentAction.agent.pathPending && currentAction.agent.remainingDistance < 2f);
+                yield return new WaitForSeconds(currentAction.duration);
+
+                multiTargetAction.AddAreaResource();
+                multiTargetAction.AddVisitedTarget();
+
+                if (energy <= 0 && !isResting)
+                {
+                    isResting = true;
+                    GAction restAction = actions.FirstOrDefault(a => a.actionName == "TakeRest");
+
+                    if (restAction != null)
+                    {
+                        currentAction = restAction;
+
+                        if (currentAction.PrePerform())
+                        {
+                            SetActionDestination(currentAction);
+                            yield return StartCoroutine(ExecuteRestAction(currentAction));// Tunggu hingga istirahat selesai
+                        }
+                    }
+
+                    isResting = false; // Reset flag setelah istirahat
+                }
+            }
+            else
+            {
+                Debug.LogWarning("No more valid targets for multi-target action.");
+                break;
+            }
+
+            yield return new WaitForSeconds(0.1f);
+        }
 
         if (multiTargetAction.visitedLocations.Count >= multiTargetAction.targetLocations)
         {
-            Debug.Log("All multi-target locations visited. Ending action.");
-            currentAction.running = false; // Hentikan aksi
-            return;
-        }
-
-        currentAction.target = multiTargetAction.GetNextTarget();
-        if (currentAction.target != null)
-        {
-            SetActionDestination(currentAction);
+            Debug.Log("Multi-target action completed.");
+            CompleteAction();
         }
         else
         {
-            Debug.LogError("No next target found for multi-target action.");
+            Debug.LogError("Failed to complete multi-target action within allowed attempts.");
+        }
+
+        isSearchingMultiTarget = false;
+    }
+
+    private IEnumerator ExecuteRestAction(GAction savedAction)
+    {
+        while (Vector3.Distance(destination, transform.position) > 2f)
+        {
+            yield return null;
+        }
+
+        yield return new WaitForSeconds(currentAction.duration + 1f);
+
+        isResting = false;
+
+        // Pastikan currentAction diatur kembali ke aksi yang disimpan
+        currentAction = savedAction;
+
+        // Jangan panggil SetActionDestination lagi jika sudah dilakukan di luar
+        if (!currentAction.running && currentAction.PrePerform())
+        {
+            SetActionDestination(currentAction);
         }
     }
 }

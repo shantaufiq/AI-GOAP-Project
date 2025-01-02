@@ -11,7 +11,8 @@ public class GoHome : GAction
 
     public override bool PostPerform()
     {
-        Destroy(this.gameObject);
+        // Debug.Log("NPC going home.");
+        Destroy(this.gameObject, 1.0f);
         return true;
     }
 }

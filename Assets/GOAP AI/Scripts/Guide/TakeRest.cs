@@ -12,10 +12,12 @@ public class TakeRest : GAction
         {
             target = resource;
             GWorld.Instance.GetWorld().ModifyState("FreeRestArea", -1);
-            return true; // Rest area tersedia
+            return true;
         }
-        Debug.Log("No rest area available.");
-        return false; // Tidak ada rest area, aksi gagal
+
+        target = null;
+        Debug.LogWarning("No rest area available. Skipping rest action.");
+        return false;
     }
 
     public override bool PostPerform()
@@ -28,7 +30,7 @@ public class TakeRest : GAction
 
             // Pulihkan energi agen
             Visitor visitor = GetComponent<Visitor>();
-            visitor.energy = Mathf.Min(visitor.energy + 50.0f, 100.0f); // Pulihkan energi hingga maksimum 100
+            visitor.energy = Mathf.Min(visitor.energy + 40.0f, 100.0f); // Pulihkan energi hingga maksimum 100
 
             // Hapus state "exhausted" jika ada
             beliefs.RemoveState("exhausted");

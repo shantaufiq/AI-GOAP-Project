@@ -84,4 +84,5 @@ public interface IMultiTargetAction
     List<GameObject> visitedLocations { get; }
     GameObject GetNextTarget();
     void AddAreaResource();
+    void AddVisitedTarget();
 }

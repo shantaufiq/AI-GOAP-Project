@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -25,9 +26,17 @@ public class ResourceQueue
         }
     }
 
-    public void AddResource(GameObject r)
+    public void AddResource(GameObject r, Action endAction = null)
     {
-        que.Enqueue(r);
+        if (!que.Contains(r))
+        {
+            que.Enqueue(r);
+            if (endAction != null) endAction.Invoke();
+        }
+        else
+        {
+            Debug.Log("Resource sudah ada dalam antrian: " + r.name);
+        }
     }
 
     public GameObject RemoveResource()
@@ -49,21 +58,8 @@ public class ResourceQueue
                     tempQueue.Enqueue(resource);
                 }
             }
-            que = tempQueue; // Ganti antrean dengan antrean baru tanpa target
+            que = tempQueue;
             return target;
-        }
-        return null; // Target tidak ditemukan
-    }
-
-    // Method baru untuk mengambil lokasi yang belum dikunjungi
-    public GameObject GetUnvisitedResource(List<GameObject> visitedLocations)
-    {
-        foreach (var resource in que)
-        {
-            if (!visitedLocations.Contains(resource))
-            {
-                return resource;
-            }
         }
         return null;
     }

@@ -12,6 +12,7 @@ public class GoToReception : GAction
     public override bool PostPerform()
     {
         beliefs.ModifyState("atReception", 1);
+        
         return true;
     }
 }
