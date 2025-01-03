@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class GoHome : GAction
 {
+    private Spawner spawner;
+
     public override bool PrePerform()
     {
         return true;
@@ -11,8 +13,8 @@ public class GoHome : GAction
 
     public override bool PostPerform()
     {
-        // Debug.Log("NPC going home.");
-        Destroy(this.gameObject, 1.0f);
+        spawner = FindObjectOfType<Spawner>();
+        spawner.RemoveObjectFromList(this.gameObject);
         return true;
     }
 }
