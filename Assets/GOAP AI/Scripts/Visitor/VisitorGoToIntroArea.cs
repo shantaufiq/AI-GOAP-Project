@@ -17,6 +17,7 @@ public class VisitorGoToIntroArea : GAction
         }
         Debug.Log("No intro area available. Skipping to view content.");
         beliefs.ModifyState("skipIntroArea", 1); // Tandai intro area dilewati
+        beliefs.ModifyState("atIntroArea", 1); // Tandai intro area dilewati
         return true; // Tetap lanjutkan ke aksi berikutnya
     }
 

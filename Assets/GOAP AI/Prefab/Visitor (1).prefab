@@ -255,7 +255,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   actionName: go home
   cost: 1
-  energyCost: 10
+  energyCost: 0
   target: {fileID: 0}
   targetTag: Home
   duration: 0

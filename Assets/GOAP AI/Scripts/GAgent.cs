@@ -133,7 +133,7 @@ public abstract class GAgent : MonoBehaviour
                 if (restAction != null)
                 {
                     Debug.LogWarning("Not enough energy to perform action: " + currentAction.actionName);
-                    actionQueue = null;
+                    // actionQueue = null;
                     currentAction = restAction;
                 }
             }
@@ -204,7 +204,7 @@ public abstract class GAgent : MonoBehaviour
     {
         if (currentAction is not IMultiTargetAction) yield break;
 
-        int maxAttempts = 25;
+        int maxAttempts = 50;
         int attempt = 0;
 
         while (multiTargetAction.visitedLocations.Count < multiTargetAction.targetLocations && attempt < maxAttempts)

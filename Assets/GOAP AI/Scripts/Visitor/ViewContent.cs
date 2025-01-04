@@ -43,11 +43,19 @@ public class ViewContent : GAction, IMultiTargetAction
 
     public override bool PrePerform()
     {
+        if (beliefs.HasState("skipIntroArea"))
+        {
+            Debug.Log("Skipping directly to view content.");
+            beliefs.RemoveState("skipIntroArea");
+            beliefs.RemoveState("atIntroArea");
+        }
+
         return true;
     }
 
     public override bool PostPerform()
     {
+
         Debug.Log($"{this.gameObject.name} has visited all content.....!!");
         beliefs.ModifyState("viewedContent", 1);
         return true;
