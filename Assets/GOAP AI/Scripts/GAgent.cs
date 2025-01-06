@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using UnityEngine.AI;
 
 public class SubGoal
 {
@@ -34,12 +35,40 @@ public abstract class GAgent : MonoBehaviour
     private bool isResting = false;
     private bool isSearchingMultiTarget = false;
 
+    public NavMeshAgent myAgent;
+    public Animator myAnimator;
+
     public void Start()
     {
         GAction[] acts = GetComponents<GAction>();
         foreach (GAction a in acts)
         {
             actions.Add(a);
+        }
+    }
+
+    void Update()
+    {
+        if (myAgent.hasPath)
+        {
+            var dir = (myAgent.steeringTarget - this.transform.position).normalized;
+            var animDir = this.transform.InverseTransformDirection(dir);
+            var isFacingMoveDirection = Vector3.Dot(dir, transform.forward) > .5f;
+
+            myAnimator.SetFloat("HorizontalX", isFacingMoveDirection ? animDir.x : 0, 0.5f, Time.deltaTime);
+            myAnimator.SetFloat("VerticalZ", isFacingMoveDirection ? animDir.z : 0, 0.5f, Time.deltaTime);
+
+            this.transform.rotation = Quaternion.RotateTowards(this.transform.rotation, Quaternion.LookRotation(dir), 180 * Time.deltaTime);
+
+            if (Vector3.Distance(transform.position, myAgent.destination) < myAgent.radius)
+            {
+                myAgent.ResetPath();
+            }
+        }
+        else
+        {
+            myAnimator.SetFloat("HorizontalX", 0, 0.25f, Time.deltaTime);
+            myAnimator.SetFloat("VerticalZ", 0, 0.25f, Time.deltaTime);
         }
     }
 
