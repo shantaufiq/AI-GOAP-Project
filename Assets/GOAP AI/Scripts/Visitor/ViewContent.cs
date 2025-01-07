@@ -43,12 +43,6 @@ public class ViewContent : GAction, IMultiTargetAction
 
     public override bool PrePerform()
     {
-        if (beliefs.HasState("skipIntroArea"))
-        {
-            Debug.Log("Skipping directly to view content.");
-            beliefs.RemoveState("skipIntroArea");
-            beliefs.RemoveState("atIntroArea");
-        }
 
         return true;
     }

@@ -944,8 +944,8 @@ MonoBehaviour:
   objectPrefab: {fileID: 7123381039469156176, guid: 167604019317f2f4caf617cdd1e2aa93,
     type: 3}
   spawnPoint: {fileID: 299138215}
-  maxObjects: 17
-  spawnInterval: 1
+  maxObjects: 15
+  spawnInterval: 5
 --- !u!1 &306721101
 GameObject:
   m_ObjectHideFlags: 0
