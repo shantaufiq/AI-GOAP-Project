@@ -23,6 +23,7 @@ public abstract class GAction : MonoBehaviour
 
     public GInventory inventory;
     public WorldStates beliefs;
+    public Animator myAnimator;
 
     public bool running = false;
 
@@ -50,6 +51,7 @@ public abstract class GAction : MonoBehaviour
 
         inventory = this.GetComponent<GAgent>().inventory;
         beliefs = this.GetComponent<GAgent>().beliefs;
+        myAnimator = this.GetComponent<GAgent>().myAnimator;
     }
 
     public bool IsAchievable()
@@ -75,6 +77,8 @@ public abstract class GAction : MonoBehaviour
 
     public abstract bool PrePerform();
     public abstract bool PostPerform();
+    public virtual void OnStartDuration() { }
+    public virtual void OnEndDuration() { }
 }
 
 public interface IMultiTargetAction

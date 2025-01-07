@@ -224,6 +224,7 @@ MonoBehaviour:
   - key: hasArrived
     value: 0
   agent: {fileID: 0}
+  myAnimator: {fileID: 0}
   running: 0
 --- !u!114 &4402099769822197446
 MonoBehaviour:
@@ -252,6 +253,7 @@ MonoBehaviour:
   - key: atReception
     value: 1
   agent: {fileID: 0}
+  myAnimator: {fileID: 0}
   running: 0
 --- !u!114 &3125566632727404767
 MonoBehaviour:
@@ -270,7 +272,7 @@ MonoBehaviour:
   energyCost: 10
   target: {fileID: 0}
   targetTag: 
-  duration: 10
+  duration: 50
   hasMultiLocationTarget: 0
   locationResourceName: 
   preConditions:
@@ -280,6 +282,7 @@ MonoBehaviour:
   - key: atIntroArea
     value: 1
   agent: {fileID: 0}
+  myAnimator: {fileID: 0}
   running: 0
 --- !u!114 &8706090789135728134
 MonoBehaviour:
@@ -308,6 +311,7 @@ MonoBehaviour:
   - key: viewedContent
     value: 1
   agent: {fileID: 0}
+  myAnimator: {fileID: 0}
   running: 0
   _visitedLocations: []
   _targetLocations: 0
@@ -338,6 +342,7 @@ MonoBehaviour:
   - key: goingHome
     value: 1
   agent: {fileID: 0}
+  myAnimator: {fileID: 0}
   running: 0
 --- !u!114 &3567708415572739974
 MonoBehaviour:
@@ -366,6 +371,7 @@ MonoBehaviour:
   - key: rested
     value: 1
   agent: {fileID: 0}
+  myAnimator: {fileID: 0}
   running: 0
 --- !u!114 &3869172708018734819
 MonoBehaviour:

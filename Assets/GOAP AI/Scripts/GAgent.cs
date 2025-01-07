@@ -89,6 +89,9 @@ public abstract class GAgent : MonoBehaviour
 
         if (currentAction is not IMultiTargetAction multiTargetAction && distanceToTarget < 2f && !invoked) // Untuk aksi biasa
         {
+
+            currentAction.OnStartDuration();
+
             Invoke("CompleteAction", currentAction.duration);
             invoked = true;
         }
@@ -181,6 +184,7 @@ public abstract class GAgent : MonoBehaviour
     {
         Debug.Log($"Complete Action... {currentAction.actionName}");
         currentAction.running = false;
+        currentAction.OnEndDuration();
         currentAction.PostPerform();
         invoked = false;
 
@@ -248,7 +252,9 @@ public abstract class GAgent : MonoBehaviour
                 // Debug.Log($"Target acquired: {currentAction.target.name}");
                 SetActionDestination(currentAction);
                 yield return new WaitUntil(() => !currentAction.agent.pathPending && currentAction.agent.remainingDistance < 2f);
+                currentAction.OnStartDuration();
                 yield return new WaitForSeconds(currentAction.duration);
+                currentAction.OnEndDuration();
 
                 multiTargetAction.AddAreaResource();
                 multiTargetAction.AddVisitedTarget();

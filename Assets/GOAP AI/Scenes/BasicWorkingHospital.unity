@@ -945,7 +945,7 @@ MonoBehaviour:
     type: 3}
   spawnPoint: {fileID: 299138215}
   maxObjects: 15
-  spawnInterval: 5
+  spawnInterval: 15
 --- !u!1 &306721101
 GameObject:
   m_ObjectHideFlags: 0
@@ -2931,7 +2931,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 60
+  field of view: 72.6
   orthographic: 0
   orthographic size: 5
   m_Depth: -1
@@ -2957,8 +2957,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.40585083, y: 0.5794434, z: -0.40698153, w: -0.5778378}
-  m_LocalPosition: {x: -6.146475, y: 20.604618, z: -17.400782}
+  m_LocalRotation: {x: -0.28534216, y: 0.64926136, z: -0.28783923, w: -0.6435746}
+  m_LocalPosition: {x: 101.641, y: 43.409363, z: 20.790976}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

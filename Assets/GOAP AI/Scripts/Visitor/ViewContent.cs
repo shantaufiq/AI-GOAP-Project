@@ -68,4 +68,16 @@ public class ViewContent : GAction, IMultiTargetAction
     {
         _visitedLocations.Add(resource);
     }
+
+    public override void OnStartDuration()
+    {
+        base.OnStartDuration();
+        myAnimator.SetTrigger("talkingTrigger");
+    }
+
+    public override void OnEndDuration()
+    {
+        base.OnEndDuration();
+        myAnimator.SetTrigger("idleTriggerr");
+    }
 }
