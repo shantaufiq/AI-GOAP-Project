@@ -941,8 +941,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8b841e17d11c4ce69f61e447d83149d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  objectPrefab: {fileID: 7123381039469156176, guid: 167604019317f2f4caf617cdd1e2aa93,
-    type: 3}
+  objectPrefabs:
+  - {fileID: 7123381039469156176, guid: 167604019317f2f4caf617cdd1e2aa93, type: 3}
+  - {fileID: 7910535605327445210, guid: 10c8588311f4c394083f9b1cb4a890da, type: 3}
+  - {fileID: 6110296820431568816, guid: 877930a412bb59f41bce4967ab1d355e, type: 3}
+  - {fileID: 140873808311753440, guid: ecf176c638ca5e64f99b52da8dec2f8e, type: 3}
+  - {fileID: 7028085273709646260, guid: fc6994e197b212f48ba1d35c007726c3, type: 3}
   spawnPoint: {fileID: 299138215}
   maxObjects: 15
   spawnInterval: 15
@@ -3952,7 +3956,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8b841e17d11c4ce69f61e447d83149d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  objectPrefab: {fileID: 0}
+  objectPrefabs: []
   spawnPoint: {fileID: 0}
   maxObjects: 5
   spawnInterval: 2

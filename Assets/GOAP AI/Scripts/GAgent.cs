@@ -87,9 +87,8 @@ public abstract class GAgent : MonoBehaviour
     {
         float distanceToTarget = Vector3.Distance(destination, transform.position);
 
-        if (currentAction is not IMultiTargetAction multiTargetAction && distanceToTarget < 2f && !invoked) // Untuk aksi biasa
+        if (currentAction is not IMultiTargetAction multiTargetAction && distanceToTarget < .9f && !invoked) // Untuk aksi biasa
         {
-
             currentAction.OnStartDuration();
 
             Invoke("CompleteAction", currentAction.duration);
@@ -251,7 +250,7 @@ public abstract class GAgent : MonoBehaviour
             {
                 // Debug.Log($"Target acquired: {currentAction.target.name}");
                 SetActionDestination(currentAction);
-                yield return new WaitUntil(() => !currentAction.agent.pathPending && currentAction.agent.remainingDistance < 2f);
+                yield return new WaitUntil(() => !currentAction.agent.pathPending && currentAction.agent.remainingDistance < .9f);
                 currentAction.OnStartDuration();
                 yield return new WaitForSeconds(currentAction.duration);
                 currentAction.OnEndDuration();
