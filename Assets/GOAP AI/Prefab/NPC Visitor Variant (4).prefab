@@ -203,7 +203,7 @@ MonoBehaviour:
   energyCost: 10
   target: {fileID: 0}
   targetTag: Reception
-  duration: 7
+  duration: 10
   hasMultiLocationTarget: 0
   locationResourceName: 
   preConditions:

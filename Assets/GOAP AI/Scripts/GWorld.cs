@@ -71,6 +71,8 @@ public sealed class GWorld
     private static WorldStates world;
     private static ResourceQueue patients;
     private static ResourceQueue cubicles;
+
+    private static ResourceQueue visitors;
     private static ResourceQueue introArea;
     private static ResourceQueue restArea;
     private static ResourceQueue contentArea;
@@ -83,6 +85,9 @@ public sealed class GWorld
         resources.Add("patients", patients);
         cubicles = new ResourceQueue("Cubicle", "FreeCubicle", world);
         resources.Add("cubicles", cubicles);
+
+        visitors = new ResourceQueue("", "", world);
+        resources.Add("visitors", visitors);
         introArea = new ResourceQueue("IntroArea", "FreeIntroArea", world);
         resources.Add("introAreas", introArea);
         restArea = new ResourceQueue("RestArea", "FreeRestArea", world);

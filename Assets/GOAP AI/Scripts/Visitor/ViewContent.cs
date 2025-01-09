@@ -25,7 +25,7 @@ public class ViewContent : GAction, IMultiTargetAction
             }
 
             _targetLocations = Random.Range(5, Mathf.Min(10, queue.que.Count + 1));
-            Debug.Log("Generated target locations: " + targetLocations);
+            // Debug.Log("Generated target locations: " + targetLocations);
         }
     }
 

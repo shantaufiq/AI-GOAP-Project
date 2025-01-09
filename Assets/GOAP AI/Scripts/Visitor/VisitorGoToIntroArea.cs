@@ -8,17 +8,18 @@ public class VisitorGoToIntroArea : GAction
 
     public override bool PrePerform()
     {
-        resource = GWorld.Instance.GetQueue("introAreas").RemoveResource();
+        GWorld.Instance.GetWorld().ModifyState("hasVisitor", -1);
+
+        resource = inventory.FindItemWithTag("IntroArea");
         if (resource != null)
         {
             target = resource;
-            GWorld.Instance.GetWorld().ModifyState("FreeIntroArea", -1);
-            return true; // Area intro tersedia
+            return true;
         }
-        Debug.Log("No intro area available. Skipping to view content.");
-        beliefs.ModifyState("skipIntroArea", 1); // Tandai intro area dilewati
-        beliefs.ModifyState("atIntroArea", 1); // Tandai intro area dilewati
-        return true; // Tetap lanjutkan ke aksi berikutnya
+
+        beliefs.ModifyState("skipIntroArea", 1);
+        beliefs.ModifyState("atIntroArea", 1);
+        return true;
     }
 
     public override bool PostPerform()
@@ -27,6 +28,8 @@ public class VisitorGoToIntroArea : GAction
         {
             GWorld.Instance.GetQueue("introAreas").AddResource(resource);
             GWorld.Instance.GetWorld().ModifyState("FreeIntroArea", 1);
+            inventory.RemoveItem(resource);
+
             beliefs.ModifyState("atIntroArea", 1);
         }
         return true;

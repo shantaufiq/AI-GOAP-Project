@@ -6,12 +6,14 @@ public class GoToReception : GAction
 {
     public override bool PrePerform()
     {
+        GWorld.Instance.GetQueue("visitors").AddResource(this.gameObject);
+        GWorld.Instance.GetWorld().ModifyState("hasVisitor", 1);
         return true;
     }
 
     public override bool PostPerform()
     {
-        // beliefs.ModifyState("atReception", 1);
+        beliefs.ModifyState("atReception", 1);
 
         return true;
     }

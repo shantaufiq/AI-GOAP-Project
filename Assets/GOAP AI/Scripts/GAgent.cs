@@ -129,6 +129,15 @@ public abstract class GAgent : MonoBehaviour
             }
         }
 
+        if (actionQueue != null && actionQueue.Count == 0)
+        {
+            if (currentGoal.remove)
+            {
+                goals.Remove(currentGoal);
+            }
+            planner = null;
+        }
+
         if (actionQueue != null && actionQueue.Count > 0)
         {
             currentAction = actionQueue.Dequeue();
@@ -164,24 +173,15 @@ public abstract class GAgent : MonoBehaviour
                 if (restAction != null)
                 {
                     Debug.LogWarning("Not enough energy to perform action: " + currentAction.actionName);
-                    // actionQueue = null;
                     currentAction = restAction;
                 }
             }
-        }
-        else if (actionQueue != null && actionQueue.Count == 0)
-        {
-            if (currentGoal.remove)
-            {
-                goals.Remove(currentGoal);
-            }
-            planner = null;
         }
     }
 
     private void CompleteAction()
     {
-        Debug.Log($"Complete Action... {currentAction.actionName}");
+        // Debug.Log($"{this.gameObject.name} Complete Action... {currentAction.actionName}");
         currentAction.running = false;
         currentAction.OnEndDuration();
         currentAction.PostPerform();
@@ -218,7 +218,7 @@ public abstract class GAgent : MonoBehaviour
     {
         if (energy <= 0)
         {
-            Debug.LogWarning("Energy depleted! Prioritizing rest.");
+            // Debug.LogWarning("Energy depleted! Prioritizing rest.");
             beliefs.ModifyState("exhausted", 1);
         }
     }
@@ -242,7 +242,7 @@ public abstract class GAgent : MonoBehaviour
         while (multiTargetAction.visitedLocations.Count < multiTargetAction.targetLocations && attempt < maxAttempts)
         {
             attempt++;
-            Debug.Log($"Starting multi-target action. Attempt {attempt}/{maxAttempts}");
+            // Debug.Log($"Starting multi-target action. Attempt {attempt}/{maxAttempts}");
 
             currentAction.target = multiTargetAction.GetNextTarget();
 
